@@ -2,52 +2,67 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use App\Repository\ContactRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ContactRepository::class)]
-#[ApiResource]
+#[ApiFilter(SearchFilter::class, properties: ['firstname' => 'partial', 'email' => 'exact'])]
 class Contact extends Timestampable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['contact:read', 'company:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['contact:read', 'contact:write', 'company:read'])]
+    #[Assert\NotBlank]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['contact:read', 'contact:write', 'company:read'])]
+    #[Assert\NotBlank]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['contact:read', 'contact:write', 'company:read'])]
+    #[Assert\Email]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['contact:read', 'contact:write', 'company:read'])]
     private ?string $phone = null;
 
     #[ORM\ManyToOne(inversedBy: 'contacts')]
+    #[Groups(['contact:read', 'contact:write'])]
     private ?Company $company = null;
 
     /**
      * @var Collection<int, Opportunity>
      */
-    #[ORM\OneToMany(targetEntity: Opportunity::class, mappedBy: 'contact')]
+    #[ORM\OneToMany(targetEntity: Opportunity::class, mappedBy: 'contact', cascade: ['remove'])]
+    #[Groups(['contact:item'])]
     private Collection $opportunities;
 
     /**
      * @var Collection<int, Note>
      */
-    #[ORM\OneToMany(targetEntity: Note::class, mappedBy: 'contact')]
+    #[ORM\OneToMany(targetEntity: Note::class, mappedBy: 'contact', cascade: ['remove'])]
+    #[Groups(['contact:item'])]
     private Collection $notes;
 
     /**
      * @var Collection<int, Task>
      */
-    #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'contact')]
+    #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'contact', cascade: ['remove'])]
+    #[Groups(['contact:item'])]
     private Collection $tasks;
 
     public function __construct()

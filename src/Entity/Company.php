@@ -7,9 +7,12 @@ use App\Repository\CompanyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    normalizationContext: ['groups' => ['company:read']]
+)]
 class Company extends Timestampable
 {
     #[ORM\Id]
@@ -36,6 +39,7 @@ class Company extends Timestampable
      * @var Collection<int, Contact>
      */
     #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'company')]
+    #[Groups(['company:read'])]
     private Collection $contacts;
 
     public function __construct()

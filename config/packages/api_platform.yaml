@@ -1,7 +1,15 @@
 api_platform:
     title: Hello API Platform
     version: 1.0.0
+    description: "Mini CRM API"
     defaults:
         stateless: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
+    enable_swagger_ui: true
+    openapi:
+        contact:
+            name: "API Platform"
+            url: "https://api-platform.com"
+            email: "contact@api-platform.com"
+
