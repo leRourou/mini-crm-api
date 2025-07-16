@@ -18,21 +18,27 @@ class Company extends Timestampable
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['company:read', 'contact:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['company:read', 'contact:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['company:read'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['company:read'])]
     private ?string $website = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['company:read'])]
     private ?string $address = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['company:read'])]
     private ?string $phone = null;
 
     /**

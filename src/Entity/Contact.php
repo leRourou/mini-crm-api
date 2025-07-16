@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\ContactRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -13,35 +14,43 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ContactRepository::class)]
 #[ApiFilter(SearchFilter::class, properties: ['firstname' => 'partial', 'email' => 'exact'])]
+#[ApiResource(
+    normalizationContext: ['groups' => ['contact:read']]
+)]
 class Contact extends Timestampable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['contact:read', 'company:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contact:read', 'contact:write', 'company:read'])]
+    #[Groups([
+        'contact:read',
+        'company:read',
+        'opportunity:read',
+        'note:read',
+        'task:read',
+    ])]
     #[Assert\NotBlank]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contact:read', 'contact:write', 'company:read'])]
+    #[Groups(['contact:read'])]
     #[Assert\NotBlank]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contact:read', 'contact:write', 'company:read'])]
+    #[Groups(['contact:read'])]
     #[Assert\Email]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contact:read', 'contact:write', 'company:read'])]
+    #[Groups(['contact:read'])]
     private ?string $phone = null;
 
     #[ORM\ManyToOne(inversedBy: 'contacts')]
-    #[Groups(['contact:read', 'contact:write'])]
+    #[Groups(['contact:read'])]
     private ?Company $company = null;
 
     /**

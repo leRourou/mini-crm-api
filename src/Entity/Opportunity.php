@@ -6,33 +6,43 @@ use ApiPlatform\Metadata\ApiResource;
 use App\Repository\OpportunityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: OpportunityRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    normalizationContext: ['groups' => ['opportunity:read']]
+)]
 class Opportunity extends Timestampable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['opportunity:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'opportunities')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['opportunity:read', 'contact:read'])]
     private ?Contact $contact = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['opportunity:read'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['opportunity:read'])]
     private ?string $description = null;
 
     #[ORM\Column(enumType: OpportunityStatus::class)]
+    #[Groups(['opportunity:read'])]
     private ?OpportunityStatus $status = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Groups(['opportunity:read'])]
     private ?string $amount = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(['opportunity:read'])]
     private ?\DateTime $closeDate = null;
 
     public function getId(): ?int
