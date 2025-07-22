@@ -2,42 +2,47 @@
 
 namespace App\Repository;
 
+use App\Contract\NoteRepositoryInterface;
 use App\Entity\Note;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<Note>
- */
-class NoteRepository extends ServiceEntityRepository
+class NoteRepository extends BaseRepository implements NoteRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Note::class);
     }
 
-//    /**
-//     * @return Note[] Returns an array of Note objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('n')
-//            ->andWhere('n.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('n.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
 
-//    public function findOneBySomeField($value): ?Note
-//    {
-//        return $this->createQueryBuilder('n')
-//            ->andWhere('n.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+
+    public function findByContact(int $contactId): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('n')
+                ->andWhere('n.contact = :contactId')
+                ->setParameter('contactId', $contactId)
+                ->orderBy('n.createdAt', 'DESC')
+        );
+    }
+
+    public function findRecentNotes(\DateTimeInterface $since): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('n')
+                ->andWhere('n.createdAt >= :since')
+                ->setParameter('since', $since)
+                ->orderBy('n.createdAt', 'DESC')
+        );
+    }
+
+    public function searchByContent(string $searchTerm): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('n')
+                ->andWhere('n.content LIKE :searchTerm OR n.name LIKE :searchTerm')
+                ->setParameter('searchTerm', '%' . $searchTerm . '%')
+                ->orderBy('n.createdAt', 'DESC')
+        );
+    }
 }

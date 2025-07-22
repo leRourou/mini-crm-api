@@ -4,7 +4,7 @@ namespace App\Entity;
 
 enum TaskStatus: string
 {
-    case PENDING = 'prospect';
-    case DONE   = 'qualified';
-    case CENCELLED    = 'won';
+    case PENDING = 'pending';
+    case DONE   = 'done';
+    case CANCELLED    = 'cancelled';
 }

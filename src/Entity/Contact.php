@@ -5,7 +5,14 @@ namespace App\Entity;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\ContactRepository;
+use App\Trait\CollectionManagerTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -15,10 +22,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: ContactRepository::class)]
 #[ApiFilter(SearchFilter::class, properties: ['firstname' => 'partial', 'email' => 'exact'])]
 #[ApiResource(
-    normalizationContext: ['groups' => ['contact:read']]
+    normalizationContext: ['groups' => ['contact:read', 'timestampable:read']],
+    denormalizationContext: ['groups' => ['contact:write']],
+    paginationItemsPerPage: 30,
+    paginationMaximumItemsPerPage: 100,
+    paginationClientItemsPerPage: true,
+    paginationClientEnabled: true,
+    operations: [
+        new Get(),
+        new GetCollection(),
+        new Post(),
+        new Put(),
+        new Patch(),
+        new Delete()
+    ]
 )]
 class Contact extends Timestampable
 {
+    use CollectionManagerTrait;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -27,6 +48,7 @@ class Contact extends Timestampable
     #[ORM\Column(length: 255)]
     #[Groups([
         'contact:read',
+        'contact:write',
         'company:read',
         'opportunity:read',
         'note:read',
@@ -36,40 +58,38 @@ class Contact extends Timestampable
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contact:read'])]
+    #[Groups([
+        'contact:read',
+        'contact:write',
+        'company:read',
+        'opportunity:read',
+        'note:read',
+        'task:read',
+    ])]
     #[Assert\NotBlank]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contact:read'])]
+    #[Groups(['contact:read', 'contact:write'])]
     #[Assert\Email]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contact:read'])]
+    #[Groups(['contact:read', 'contact:write'])]
     private ?string $phone = null;
 
     #[ORM\ManyToOne(inversedBy: 'contacts')]
-    #[Groups(['contact:read'])]
+    #[Groups(['contact:read', 'contact:write'])]
     private ?Company $company = null;
 
-    /**
-     * @var Collection<int, Opportunity>
-     */
     #[ORM\OneToMany(targetEntity: Opportunity::class, mappedBy: 'contact', cascade: ['remove'])]
     #[Groups(['contact:item'])]
     private Collection $opportunities;
 
-    /**
-     * @var Collection<int, Note>
-     */
     #[ORM\OneToMany(targetEntity: Note::class, mappedBy: 'contact', cascade: ['remove'])]
     #[Groups(['contact:item'])]
     private Collection $notes;
 
-    /**
-     * @var Collection<int, Task>
-     */
     #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'contact', cascade: ['remove'])]
     #[Groups(['contact:item'])]
     private Collection $tasks;
@@ -146,9 +166,6 @@ class Contact extends Timestampable
         return $this;
     }
 
-    /**
-     * @return Collection<int, Opportunity>
-     */
     public function getOpportunities(): Collection
     {
         return $this->opportunities;
@@ -156,29 +173,23 @@ class Contact extends Timestampable
 
     public function addOpportunity(Opportunity $opportunity): static
     {
-        if (!$this->opportunities->contains($opportunity)) {
-            $this->opportunities->add($opportunity);
-            $opportunity->setContact($this);
-        }
-
-        return $this;
+        return $this->addToCollection(
+            $this->opportunities,
+            $opportunity,
+            fn($item, $parent) => $item->setContact($parent)
+        );
     }
 
     public function removeOpportunity(Opportunity $opportunity): static
     {
-        if ($this->opportunities->removeElement($opportunity)) {
-            // set the owning side to null (unless already changed)
-            if ($opportunity->getContact() === $this) {
-                $opportunity->setContact(null);
-            }
-        }
-
-        return $this;
+        return $this->removeFromCollection(
+            $this->opportunities,
+            $opportunity,
+            fn($item) => $item->getContact(),
+            fn($item, $value) => $item->setContact($value)
+        );
     }
 
-    /**
-     * @return Collection<int, Note>
-     */
     public function getNotes(): Collection
     {
         return $this->notes;
@@ -186,29 +197,23 @@ class Contact extends Timestampable
 
     public function addNote(Note $note): static
     {
-        if (!$this->notes->contains($note)) {
-            $this->notes->add($note);
-            $note->setContact($this);
-        }
-
-        return $this;
+        return $this->addToCollection(
+            $this->notes,
+            $note,
+            fn($item, $parent) => $item->setContact($parent)
+        );
     }
 
     public function removeNote(Note $note): static
     {
-        if ($this->notes->removeElement($note)) {
-            // set the owning side to null (unless already changed)
-            if ($note->getContact() === $this) {
-                $note->setContact(null);
-            }
-        }
-
-        return $this;
+        return $this->removeFromCollection(
+            $this->notes,
+            $note,
+            fn($item) => $item->getContact(),
+            fn($item, $value) => $item->setContact($value)
+        );
     }
 
-    /**
-     * @return Collection<int, Task>
-     */
     public function getTasks(): Collection
     {
         return $this->tasks;
@@ -216,23 +221,20 @@ class Contact extends Timestampable
 
     public function addTask(Task $task): static
     {
-        if (!$this->tasks->contains($task)) {
-            $this->tasks->add($task);
-            $task->setContact($this);
-        }
-
-        return $this;
+        return $this->addToCollection(
+            $this->tasks,
+            $task,
+            fn($item, $parent) => $item->setContact($parent)
+        );
     }
 
     public function removeTask(Task $task): static
     {
-        if ($this->tasks->removeElement($task)) {
-            // set the owning side to null (unless already changed)
-            if ($task->getContact() === $this) {
-                $task->setContact(null);
-            }
-        }
-
-        return $this;
+        return $this->removeFromCollection(
+            $this->tasks,
+            $task,
+            fn($item) => $item->getContact(),
+            fn($item, $value) => $item->setContact($value)
+        );
     }
 }

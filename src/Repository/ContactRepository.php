@@ -2,42 +2,53 @@
 
 namespace App\Repository;
 
+use App\Contract\ContactRepositoryInterface;
 use App\Entity\Contact;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<Contact>
- */
-class ContactRepository extends ServiceEntityRepository
+class ContactRepository extends BaseRepository implements ContactRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Contact::class);
     }
 
-    //    /**
-    //     * @return Contact[] Returns an array of Contact objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findByEmail(string $email): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('c')
+                ->andWhere('c.email = :email')
+                ->setParameter('email', $email)
+                ->orderBy('c.lastname', 'ASC')
+                ->addOrderBy('c.firstname', 'ASC')
+        );
+    }
 
-    //    public function findOneBySomeField($value): ?Contact
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function findByCompany(int $companyId): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('c')
+                ->andWhere('c.company = :companyId')
+                ->setParameter('companyId', $companyId)
+                ->orderBy('c.lastname', 'ASC')
+                ->addOrderBy('c.firstname', 'ASC')
+        );
+    }
+
+    public function findByName(string $firstname, ?string $lastname = null): array
+    {
+        $qb = $this->createBaseQueryBuilder('c')
+            ->andWhere('c.firstname LIKE :firstname')
+            ->setParameter('firstname', '%' . $firstname . '%');
+
+        if ($lastname !== null) {
+            $qb->andWhere('c.lastname LIKE :lastname')
+               ->setParameter('lastname', '%' . $lastname . '%');
+        }
+
+        return $this->executeQuery(
+            $qb->orderBy('c.lastname', 'ASC')
+               ->addOrderBy('c.firstname', 'ASC')
+        );
+    }
 }

@@ -3,7 +3,14 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\CompanyRepository;
+use App\Trait\CollectionManagerTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -11,10 +18,24 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
 #[ApiResource(
-    normalizationContext: ['groups' => ['company:read']]
+    normalizationContext: ['groups' => ['company:read', 'timestampable:read']],
+    denormalizationContext: ['groups' => ['company:write']],
+    paginationItemsPerPage: 30,
+    paginationMaximumItemsPerPage: 100,
+    paginationClientItemsPerPage: true,
+    paginationClientEnabled: true,
+    operations: [
+        new Get(),
+        new GetCollection(),
+        new Post(),
+        new Put(),
+        new Patch(),
+        new Delete()
+    ]
 )]
 class Company extends Timestampable
 {
+    use CollectionManagerTrait;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -22,29 +43,35 @@ class Company extends Timestampable
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['company:read', 'contact:read'])]
+    #[Groups([
+        'company:read', 
+        'company:write', 
+        'contact:read'
+        ]
+    )]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['company:read'])]
+    #[Groups(['company:read', 'company:write'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['company:read'])]
+    #[Groups(['company:read', 'company:write'])]
     private ?string $website = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['company:read'])]
+    #[Groups(['company:read', 'company:write'])]
     private ?string $address = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['company:read'])]
+    #[Groups(['company:read', 'company:write'])]
     private ?string $phone = null;
 
-    /**
-     * @var Collection<int, Contact>
-     */
-    #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'company')]
+    #[ORM\OneToMany(
+        targetEntity: Contact::class,
+        mappedBy: 'company',
+        orphanRemoval: true
+    )]
     #[Groups(['company:read'])]
     private Collection $contacts;
 
@@ -118,9 +145,6 @@ class Company extends Timestampable
         return $this;
     }
 
-    /**
-     * @return Collection<int, Contact>
-     */
     public function getContacts(): Collection
     {
         return $this->contacts;
@@ -128,23 +152,20 @@ class Company extends Timestampable
 
     public function addContact(Contact $contact): static
     {
-        if (!$this->contacts->contains($contact)) {
-            $this->contacts->add($contact);
-            $contact->setCompany($this);
-        }
-
-        return $this;
+        return $this->addToCollection(
+            $this->contacts,
+            $contact,
+            fn($item, $parent) => $item->setCompany($parent)
+        );
     }
 
     public function removeContact(Contact $contact): static
     {
-        if ($this->contacts->removeElement($contact)) {
-            // set the owning side to null (unless already changed)
-            if ($contact->getCompany() === $this) {
-                $contact->setCompany(null);
-            }
-        }
-
-        return $this;
+        return $this->removeFromCollection(
+            $this->contacts,
+            $contact,
+            fn($item) => $item->getCompany(),
+            fn($item, $value) => $item->setCompany($value)
+        );
     }
 }

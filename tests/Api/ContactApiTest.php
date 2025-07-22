@@ -69,7 +69,6 @@ class ContactApiTest extends AbstractApiTestCase
 
         $this->assertResponseStatusCodeSame(204);
 
-        // Verify that the contact is actually deleted
         $this->assertNull(
             static::getContainer()->get(EntityManagerInterface::class)->getRepository(Contact::class)->find($contact->getId())
         );

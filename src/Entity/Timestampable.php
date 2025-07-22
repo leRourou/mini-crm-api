@@ -1,27 +1,37 @@
 <?php
-// src/Entity/Timestampable.php
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\MappedSuperclass]
 #[ORM\HasLifecycleCallbacks]
 abstract class Timestampable
 {
     #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $createdAt;
+    #[Groups(['timestampable:read'])]
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $updatedAt;
+    #[Groups(['timestampable:read'])]
+    private ?\DateTimeImmutable $updatedAt = null;
 
-    public function getCreatedAt(): \DateTimeImmutable
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): \DateTimeImmutable
+    public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function setCreatedAt(?\DateTimeImmutable $createdAt): static
+    {
+        if ($this->createdAt === null) {
+            $this->createdAt = $createdAt;
+        }
+        return $this;
     }
 
     #[ORM\PrePersist]
@@ -36,5 +46,8 @@ abstract class Timestampable
     public function updateTimestamp(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+        if ($this->createdAt === null) {
+            $this->createdAt = new \DateTimeImmutable();
+        }
     }
 }

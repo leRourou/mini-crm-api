@@ -1,0 +1,32 @@
+# Service configuration for SOLID principles compliance
+# Following Dependency Inversion Principle - depend on abstractions, not concretions
+
+services:
+    # Repository interfaces
+    App\Contract\ContactRepositoryInterface:
+        alias: App\Repository\ContactRepository
+
+    App\Contract\CompanyRepositoryInterface:
+        alias: App\Repository\CompanyRepository
+
+    App\Contract\OpportunityRepositoryInterface:
+        alias: App\Repository\OpportunityRepository
+
+    App\Contract\TaskRepositoryInterface:
+        alias: App\Repository\TaskRepository
+
+    App\Contract\NoteRepositoryInterface:
+        alias: App\Repository\NoteRepository
+
+    # Service interfaces
+    App\Contract\DashboardServiceInterface:
+        alias: App\Service\DashboardService
+
+    # Explicitly configure DashboardService with repository interfaces
+    App\Service\DashboardService:
+        arguments:
+            $contactRepository: '@App\Contract\ContactRepositoryInterface'
+            $companyRepository: '@App\Contract\CompanyRepositoryInterface'
+            $opportunityRepository: '@App\Contract\OpportunityRepositoryInterface'
+            $taskRepository: '@App\Contract\TaskRepositoryInterface'
+            $noteRepository: '@App\Contract\NoteRepositoryInterface'

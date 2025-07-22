@@ -10,7 +10,7 @@ use Doctrine\Persistence\ObjectManager;
 
 class TaskFixtures extends BaseFixture implements DependentFixtureInterface
 {
-    protected function loadData(ObjectManager $manager)
+    protected function loadData(ObjectManager $manager): void
     {
         $contacts = $manager->getRepository(Contact::class)->findAll();
 

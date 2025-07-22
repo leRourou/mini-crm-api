@@ -3,6 +3,12 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\TaskRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -11,7 +17,20 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ApiResource(
-    normalizationContext: ['groups' => ['task:read']],
+    normalizationContext: ['groups' => ['task:read', 'timestampable:read']],
+    denormalizationContext: ['groups' => ['task:write']],
+    paginationItemsPerPage: 30,
+    paginationMaximumItemsPerPage: 100,
+    paginationClientItemsPerPage: true,
+    paginationClientEnabled: true,
+    operations: [
+        new Get(),
+        new GetCollection(),
+        new Post(),
+        new Put(),
+        new Patch(),
+        new Delete()
+    ]
 )]
 class Task extends Timestampable
 {
@@ -22,20 +41,20 @@ class Task extends Timestampable
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'tasks')]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['task:read'])]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['task:read', 'task:write'])]
     private ?Contact $contact = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['task:read'])]
+    #[Groups(['task:read', 'task:write'])]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    #[Groups(['task:read'])]
+    #[Groups(['task:read', 'task:write'])]
     private ?\DateTime $dueDate = null;
 
     #[ORM\Column(enumType: TaskStatus::class)]
-    #[Groups(['task:read'])]
+    #[Groups(['task:read', 'task:write'])]
     private ?TaskStatus $status = null;
 
     public function getId(): ?int

@@ -7,16 +7,16 @@ use Doctrine\Persistence\ObjectManager;
 
 class CompanyFixtures extends BaseFixture
 {
-    protected function loadData(ObjectManager $manager)
+    protected function loadData(ObjectManager $manager): void
     {
-        $this->createMany(Company::class, 20, function (Company $company) {
-            $company->setName($this->faker->company);
-            $company->setDescription($this->faker->catchPhrase);
-            $company->setWebsite($this->faker->domainName);
-            $company->setAddress($this->faker->address);
-            $company->setPhone($this->faker->phoneNumber);
+        $this->createMany(Company::class, 261, function (Company $company) {
+            $company->setName($this->faker->company)
+                ->setDescription($this->faker->catchPhrase)
+                ->setWebsite($this->faker->domainName)
+                ->setAddress($this->faker->address)
+                ->setPhone($this->faker->phoneNumber);
         });
 
-        $manager->flush();
+        $this->flush();
     }
 }

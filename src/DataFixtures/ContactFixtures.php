@@ -9,19 +9,19 @@ use Doctrine\Persistence\ObjectManager;
 
 class ContactFixtures extends BaseFixture implements DependentFixtureInterface
 {
-    protected function loadData(ObjectManager $manager)
+    protected function loadData(ObjectManager $manager): void
     {
         $companies = $manager->getRepository(Company::class)->findAll();
 
-        $this->createMany(Contact::class, 50, function (Contact $contact) use ($companies) {
-            $contact->setFirstname($this->faker->firstName);
-            $contact->setLastname($this->faker->lastName);
-            $contact->setEmail($this->faker->email);
-            $contact->setPhone($this->faker->phoneNumber);
-            $contact->setCompany($this->faker->randomElement($companies));
+        $this->createMany(Contact::class, 324, function (Contact $contact) use ($companies) {
+            $contact->setFirstname($this->faker->firstName)
+                ->setLastname($this->faker->lastName)
+                ->setEmail($this->faker->unique()->email)
+                ->setPhone($this->faker->phoneNumber)
+                ->setCompany($this->getRandomElement($companies));
         });
 
-        $manager->flush();
+        $this->flush();
     }
 
     public function getDependencies(): array

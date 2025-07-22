@@ -54,7 +54,6 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, $token, string $firewallName): ?Response
     {
-        // Rien à faire, on laisse la requête continuer
         return null;
     }
 

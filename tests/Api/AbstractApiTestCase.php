@@ -16,7 +16,6 @@ abstract class AbstractApiTestCase extends ApiTestCase
         parent::setUp();
 
         $container = static::getContainer();
-        /** @var EntityManagerInterface $em */
         $em = $container->get(EntityManagerInterface::class);
 
         $metadatas = $em->getMetadataFactory()->getAllMetadata();
@@ -30,9 +29,7 @@ abstract class AbstractApiTestCase extends ApiTestCase
         $client = static::createClient();
         $container = static::getContainer();
 
-        /** @var EntityManagerInterface $em */
         $em = $container->get(EntityManagerInterface::class);
-        /** @var UserPasswordHasherInterface $passwordHasher */
         $passwordHasher = $container->get(UserPasswordHasherInterface::class);
 
         $user = new User();

@@ -2,42 +2,59 @@
 
 namespace App\Repository;
 
+use App\Contract\TaskRepositoryInterface;
 use App\Entity\Task;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\TaskStatus;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<Task>
- */
-class TaskRepository extends ServiceEntityRepository
+class TaskRepository extends BaseRepository implements TaskRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Task::class);
     }
 
-//    /**
-//     * @return Task[] Returns an array of Task objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('t.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findByContact(int $contactId): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('t')
+                ->andWhere('t.contact = :contactId')
+                ->setParameter('contactId', $contactId)
+                ->orderBy('t.dueDate', 'ASC')
+        );
+    }
 
-//    public function findOneBySomeField($value): ?Task
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findByStatus(TaskStatus $status): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('t')
+                ->andWhere('t.status = :status')
+                ->setParameter('status', $status)
+                ->orderBy('t.dueDate', 'ASC')
+        );
+    }
+
+    public function findOverdue(\DateTimeInterface $date): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('t')
+                ->andWhere('t.dueDate < :date')
+                ->andWhere('t.status = :status')
+                ->setParameter('date', $date)
+                ->setParameter('status', TaskStatus::PENDING)
+                ->orderBy('t.dueDate', 'ASC')
+        );
+    }
+
+    public function findDueSoon(\DateTimeInterface $date): array
+    {
+        return $this->executeQuery(
+            $this->createBaseQueryBuilder('t')
+                ->andWhere('t.dueDate <= :date')
+                ->andWhere('t.status = :status')
+                ->setParameter('date', $date)
+                ->setParameter('status', TaskStatus::PENDING)
+                ->orderBy('t.dueDate', 'ASC')
+        );
+    }
 }

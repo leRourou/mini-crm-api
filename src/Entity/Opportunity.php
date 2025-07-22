@@ -3,6 +3,12 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\OpportunityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -10,7 +16,20 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: OpportunityRepository::class)]
 #[ApiResource(
-    normalizationContext: ['groups' => ['opportunity:read']]
+    normalizationContext: ['groups' => ['opportunity:read', 'timestampable:read']],
+    denormalizationContext: ['groups' => ['opportunity:write']],
+    paginationItemsPerPage: 30,
+    paginationMaximumItemsPerPage: 100,
+    paginationClientItemsPerPage: true,
+    paginationClientEnabled: true,
+    operations: [
+        new Get(),
+        new GetCollection(),
+        new Post(),
+        new Put(),
+        new Patch(),
+        new Delete()
+    ]
 )]
 class Opportunity extends Timestampable
 {
@@ -21,28 +40,28 @@ class Opportunity extends Timestampable
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'opportunities')]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['opportunity:read', 'contact:read'])]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['opportunity:read', 'opportunity:write', 'contact:read'])]
     private ?Contact $contact = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['opportunity:read'])]
+    #[Groups(['opportunity:read', 'opportunity:write'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['opportunity:read'])]
+    #[Groups(['opportunity:read', 'opportunity:write'])]
     private ?string $description = null;
 
     #[ORM\Column(enumType: OpportunityStatus::class)]
-    #[Groups(['opportunity:read'])]
+    #[Groups(['opportunity:read', 'opportunity:write'])]
     private ?OpportunityStatus $status = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Groups(['opportunity:read'])]
+    #[Groups(['opportunity:read', 'opportunity:write'])]
     private ?string $amount = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    #[Groups(['opportunity:read'])]
+    #[Groups(['opportunity:read', 'opportunity:write'])]
     private ?\DateTime $closeDate = null;
 
     public function getId(): ?int

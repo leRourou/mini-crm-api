@@ -12,8 +12,13 @@ class UserFixtures extends BaseFixture
     {
     }
 
-    protected function loadData(ObjectManager $manager)
+    protected function loadData(ObjectManager $manager): void
     {
+        $adminUser = new User();
+        $adminUser->setEmail('admin@example.com');
+        $adminUser->setPassword($this->passwordHasher->hashPassword($adminUser, 'password'));
+        $manager->persist($adminUser);
+
         $this->createMany(User::class, 10, function (User $user) {
             $user->setEmail($this->faker->email);
             $user->setPassword($this->passwordHasher->hashPassword($user, 'password'));
